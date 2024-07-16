@@ -1,153 +1,95 @@
-from sqlalchemy import create_engine
-import psycopg2
+from sqlalchemy import create_engine, Column, String, Integer, ForeignKey, Text, Table, MetaData, inspect, text
+from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import sessionmaker, relationship
 import random
 
-dialect = "postgresql"
-driver = "psycopg2"
-username = "postgres"
-password = "password" # Change to your own password
-host = "127.0.0.1"
-port = "5432"
-database_name = "test" # Change to your own database name
+Base = declarative_base()
+metadata = MetaData()
 
-conn = psycopg2.connect(
-    dbname=database_name,
-    user=username,
-    password=password,
-    host=host,
-    port=port
-)
+class User(Base):
+    __tablename__ = 'users'
+    email = Column('email', String(100), primary_key=True)
+    fname = Column('fname', String(50))
+    lname = Column('lname', String(50))
+    hashed_pw = Column('hashed_pw', String(100))
+    role = Column('role', Integer)
 
-print(conn)
+class Author(Base):
+    __tablename__ = 'authors'
+    author_id = Column('author_id', Integer, primary_key=True)
+    name = Column('name', String(100))
+    biography = Column('biography', Text)
 
-engine = create_engine(f"{dialect}+{driver}://{username}:{password}@{host}:{port}/{database_name}")
+class Book(Base):
+    __tablename__ = 'books'
+    book_id = Column("book_id", Integer, primary_key=True)
+    author_id = Column("author_id", Integer, ForeignKey('authors.author_id'))
+    title = Column("title", String(150))
+    genre = Column("genre", String(30))
+    description = Column("description", Text)
+    year = Column("year", Integer)
+    author = relationship("Author")
 
-print(engine)
 
-cur = conn.cursor()
+class Preferences(Base):
+    __tablename__ = 'preferences'
+    email = Column("email", String(100), ForeignKey('users.email'), primary_key=True)
+    preference = Column("preference", String(30), primary_key=True)
+    user = relationship("User")
 
-cur.execute("""
-DROP TABLE IF EXISTS employees;
-""")
+DATABASE_URL = "postgresql+psycopg2://postgres:password@127.0.0.1:5432/test" # change the url password and database name
+engine = create_engine(DATABASE_URL)
+Session = sessionmaker(bind=engine)
+session = Session()
 
-cur.execute("""
-DROP TABLE IF EXISTS users;
-""")
-
-cur.execute("""
-DROP TABLE IF EXISTS books;
-""")
-
-cur.execute("""
-DROP TABLE IF EXISTS authors;
-""")
-
-cur.execute("""
-CREATE TABLE IF NOT EXISTS users (
-    email VARCHAR(100) PRIMARY KEY,
-    fname VARCHAR(50),
-    lname VARCHAR(50),
-    hashed_pw VARCHAR(100),
-    ROLE INT
-);
-""")
+Base.metadata.drop_all(engine)
+Base.metadata.create_all(engine)
 
 emails = [f"email_{i}@gmail.com" for i in range(30)]
-fname = [f"fname_{i}" for i in range(30)]
-lname = [f"lname_{i}" for i in range(30)]
-hashed_pw =  [hash(f"password_{i}") for i in range(30)]
-role = [0]*15 + [1]*15
-users_inserts = list(zip(emails, fname, lname, hashed_pw, role))
+fnames = [f"fname_{i}" for i in range(30)]
+lnames = [f"lname_{i}" for i in range(30)]
+hashed_pws = [hash(f"password_{i}") for i in range(30)]
+roles = [0]*15 + [1]*15
 
-cur.executemany(
-    "INSERT INTO users (email, fname, lname, hashed_pw, role) VALUES (%s, %s, %s, %s,%s)",
-    users_inserts
-)
+users_inserts = [User(email=email, fname=fname, lname=lname, hashed_pw=hashed_pw, role=role) for email, fname, lname, hashed_pw, role in zip(emails, fnames, lnames, hashed_pws, roles)]
+session.add_all(users_inserts)
 
-cur.execute("""
-CREATE TABLE IF NOT EXISTS authors (
-    author_id INT PRIMARY KEY,
-    name VARCHAR(100),
-    biography VARCHAR(500)
-)
-""")
-author_id = [str(i) for i in range(30)]
-name = [f"name_{i}" for i in range(30)]
-biography = [f"some_biography_{i}" for i in range(30)]
-authors_inserts = list(zip(author_id, name, biography))
-cur.executemany(
-    "INSERT INTO authors (author_id, name, biography) VALUES (%s, %s, %s)",
-    authors_inserts
-)
+author_ids = [i for i in range(30)]
+names = [f"name_{i}" for i in range(30)]
+biographies = [f"some_biography_{i}" for i in range(30)]
 
-cur.execute("""
-CREATE TABLE IF NOT EXISTS books (
-    book_id INT PRIMARY KEY,
-    author_id INT,
-    title VARCHAR(150),
-    genre VARCHAR(30),
-    description VARCHAR(500),
-    year INT,
-    FOREIGN KEY (author_id) REFERENCES authors(author_id)
-)
-""")
-book_id = [str(i) for i in range(30)]
-author_id = [str(i) for i in range(30)]
-title = [f"title_{i}" for i in range(30)]
-genre = [f"title_{i}" for i in range(30)]
-description = [f"some_description_{i}" for i in range(30)]
-year = [i for i in range(1990, 2020)]
-books_inserts = list(zip(book_id, author_id, title, genre, description, year))
+authors = [Author(author_id=author_id, name=name, biography=biography) for author_id, name, biography in zip(author_ids, names, biographies)]
+session.add_all(authors)
 
-cur.executemany(
-    "INSERT INTO books (book_id, author_id, title, genre, description, year) VALUES (%s, %s, %s, %s, %s, %s)",
-    books_inserts
-)
+book_ids = [i for i in range(30)]
+titles = [f"title_{i}" for i in range(30)]
+genres = [f"genre_{i}" for i in range(30)]
+descriptions = [f"some_description_{i}" for i in range(30)]
+years = [i for i in range(1990, 2020)]
 
-conn.commit()
+books = [Book(book_id=book_id, author_id=author_id, title=title, genre=genre, description=description, year=year) for book_id, author_id, title, genre, description, year in zip(book_ids, author_ids, titles, genres, descriptions, years)]
+session.add_all(books)
 
-def fetch_from_database(db_name):
-    print("\t\n"+"*"*20, f"{db_name}", "*"*20+"\t\n")
-    cur.execute(f"SELECT * FROM {db_name}")
-    rows = cur.fetchall()
-    for row in rows:
-        print(row)
+session.commit()
 
 preferences = [[f"pref_{i}" for i in range(random.randint(3, 7))] for _ in range(30)]
-cur.execute(f"SELECT * FROM users")
-rows = cur.fetchall()
 
-for i, row in enumerate(rows):
-    email = row[0]
-    cur.execute(f"DROP TABLE IF EXISTS preferences_{i};")
-    cur.execute(f'''
-            CREATE TABLE IF NOT EXISTS preferences_{i} (
-                id SERIAL PRIMARY KEY,
-                email VARCHAR(100),
-                book_title VARCHAR(255),
-                FOREIGN KEY (email) REFERENCES users(email)
-            )
-        '''
-    )
-    book_list = preferences[i]
-    for book in book_list:
-        cur.execute(f'''
-            INSERT INTO preferences_{i} (email, book_title)
-            VALUES (%s, %s)
-        ''', (email, book))
+for i, user in enumerate(users_inserts):
+    email = users_inserts[i].email
+    preferenc_inserts = [Preferences(email=email, preference=preference) for preference in preferences[i]]
+    session.add_all(preferenc_inserts)
+
+session.commit()
+def fetch_from_database(table_name):
+    print("\t\n" + "*" * 20, f"{table_name}", "*" * 20 + "\t\n")
+    with engine.connect() as connection:
+        result = connection.execute(text(f"SELECT * FROM {table_name}"))
+        for row in result:
+            print(row)
 
 fetch_from_database("users")
 fetch_from_database("authors")
 fetch_from_database("books")
-fetch_from_database("preferences_29")
+fetch_from_database("preferences")
 
-# cur.execute('''
-# SELECT book_title 
-# FROM preferences_29
-# WHERE preferences_29.email = (SELECT email FROM users WHERE users.fname = %s);
-# ''', ('fname_29',))
-# rows = cur.fetchall()
-# print(rows)
-
-cur.close()
-conn.close()
+session.close()
