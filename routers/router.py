@@ -58,7 +58,7 @@ def delete_author():
 def add_user():
     return {"add": "user"}
 
-#What's JWT?
+#What's JWT? ADDED FUNCTION
 @app.post("/users/login")
 def auth_user():
     return {"auth": "user"}
