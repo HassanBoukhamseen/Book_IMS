@@ -3,10 +3,13 @@ from app.schemas.login_info import Login
 from app.services.book_recommendations import get_book_recommendations
 from app.services.user_retrievals import retrieve_single_user
 from app.services.authenticate_user import authenticate_user
+from app.services.token import create_access_token, verify_token
+from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.schemas.session import SessionData
 from uuid import UUID, uuid4
 from fastapi_sessions.backends.implementations import InMemoryBackend # type: ignore
 from fastapi import Depends, FastAPI, HTTPException, Request, logger
+from datetime import timedelta
 from app.schemas.user import User
 from app.services.user_registration import register_user
 
@@ -95,7 +98,16 @@ async def auth_user(login_data: Login):
         role=user_info["role"]
     )
     await backend.create(session, data)
-    return user_info
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user_info["email"]}, expires_delta=access_token_expires
+    )
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user_info": user_info
+    }
 
 @app.get("/users/me")
 def get_user():
