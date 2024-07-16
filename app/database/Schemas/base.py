@@ -3,4 +3,3 @@ from app.database.connector import connect_to_db
 
 engine, session = connect_to_db()
 Base = declarative_base()
-

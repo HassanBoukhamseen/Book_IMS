@@ -4,8 +4,10 @@ from app.services.user_retrievals import retrieve_single_user
 from app.services.authenticate_user import authenticate_user
 from app.schemas.session import SessionData
 from uuid import UUID, uuid4
-from fastapi_sessions.backends.implementations import InMemoryBackend
-from fastapi import FastAPI, Request
+from fastapi_sessions.backends.implementations import InMemoryBackend # type: ignore
+from fastapi import FastAPI, HTTPException, Request
+from app.schemas.user import User
+from app.services.user_registration import register_user
 
 app = FastAPI()
 backend = InMemoryBackend[UUID, SessionData]()
@@ -64,8 +66,16 @@ def delete_author():
 
 
 @app.post("/users/register")
-def add_user():
-    return {"add": "user"}
+def add_user(user: User):
+    success, message = register_user(user)
+    if not success:
+        raise HTTPException(status_code=400, detail=message)
+
+    registered_user = retrieve_single_user(user.email)
+    if not registered_user:
+        raise HTTPException(status_code=404, detail="User not found after registration")
+    
+    return registered_user
 
 #Still need 
 @app.post("/users/login")
