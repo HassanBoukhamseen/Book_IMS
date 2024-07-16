@@ -2,7 +2,8 @@ from fastapi import FastAPI
 
 app = FastAPI()
 
-##DEFAULT
+##DEFAULT 
+#ADDED FUNCTION
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
