@@ -1,11 +1,12 @@
 from app.services.author_retrievals import retrieve_single_author, retrieve_authors_from_db
 from app.schemas.login_info import Login
+from app.services.book_recommendations import get_book_recommendations
 from app.services.user_retrievals import retrieve_single_user
 from app.services.authenticate_user import authenticate_user
 from app.schemas.session import SessionData
 from uuid import UUID, uuid4
 from fastapi_sessions.backends.implementations import InMemoryBackend # type: ignore
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request, logger
 from app.schemas.user import User
 from app.services.user_registration import register_user
 
@@ -67,10 +68,12 @@ def delete_author():
 
 @app.post("/users/register")
 def add_user(user: User):
+    print(f"Received user data: {user}")
     success, message = register_user(user)
     if not success:
         raise HTTPException(status_code=400, detail=message)
-
+    
+    # Retrieve the user details after successful registration
     registered_user = retrieve_single_user(user.email)
     if not registered_user:
         raise HTTPException(status_code=404, detail="User not found after registration")
@@ -102,9 +105,14 @@ def get_user():
 def update_user():
     return {"update": "authed user"}
 
+# Under test
 @app.get("/recommendations")
-def get_recommendations():
-    return {"retreive": "recommendations for authed user prefs"}
+# def get_recommendations(user: User):
+#     email = User.email["email"]
+#     book_recommendations = get_book_recommendations(email)
+#     if not book_recommendations:
+#         raise HTTPException(status_code=404, detail="No recommendations found")
+#     return book_recommendations
 
 @app.get("/healthcheck")
 def health_check():
