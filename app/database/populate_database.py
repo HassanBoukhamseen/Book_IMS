@@ -1,9 +1,9 @@
 from sqlalchemy import MetaData, text
-from book_ims.database.Schemas.base import engine, session, Base
-from book_ims.database.Schemas.user import User
-from book_ims.database.Schemas.author import Author
-from book_ims.database.Schemas.books import Book
-from book_ims.database.Schemas.preferences import Preferences
+from app.database.Schemas.base import engine, session, Base
+from app.database.Schemas.user import User
+from app.database.Schemas.author import Author
+from app.database.Schemas.books import Book
+from app.database.Schemas.preferences import Preferences
 import random
 
 
