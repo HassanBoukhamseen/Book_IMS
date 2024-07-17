@@ -1,6 +1,6 @@
-from fastapi import Depends, FastAPI, HTTPException, Request, logger
+from fastapi import Depends, FastAPI, HTTPException, Request
 from app.services.author_retrievals import retrieve_single_author, retrieve_authors_from_db
-from app.services.book_services import retrieve_single_book, retrieve_books_from_db, delete_book as delete_book_from_db
+from app.services.book_services import retrieve_single_book, retrieve_books_from_db, add_book_to_db, delete_book as delete_book_from_db
 from app.schemas.login_info import Login
 from app.services.user_retrievals import retrieve_single_user
 from app.services.authenticate_user import authenticate_user
@@ -11,11 +11,15 @@ from app.schemas.session import SessionData
 from uuid import UUID, uuid4
 from fastapi_sessions.backends.implementations import InMemoryBackend
 from app.schemas.user import User
+from app.schemas.book import Book
 from app.services.user_registration import register_user
 from datetime import timedelta
+from app.utils.get_current_user import get_current_user
+from app.middleware.request_logger import setup_middleware
 
 app = FastAPI()
 backend = InMemoryBackend[UUID, SessionData]()
+setup_middleware(app)
 
 @app.get("/")
 def read_root():
@@ -34,8 +38,14 @@ def get_book(book_id: int):
 
 #@ADMIN ONLY
 @app.post("/books")
-def add_book():
-    return {"add": "new book"}
+def add_book(book: Book, current_user: dict = Depends(get_current_user)):
+    if current_user["role"] != 1:
+        raise HTTPException(status_code=403, detail="Not Authorized")
+    print(book) #testing
+    book_id = add_book_to_db(book)
+    if book_id is None:
+        raise HTTPException(status_code=400, detail="Failed to add book")
+    return {"message": "Book added successfully", "book_id": book_id}
 
 #@ADMIN ONLY
 @app.put("/books/{book_id}")
@@ -44,7 +54,9 @@ def update_book():
 
 #@ADMIN ONLY
 @app.delete("/books/{book_id}")
-def delete_book_route(book_id: int):
+def delete_book_route(book_id: int, current_user: dict = Depends(get_current_user)):
+    if current_user["role"] != 1:
+        raise HTTPException(status_code=403, detail="Not Authorized")
     deleted_book = delete_book_from_db(book_id)
     if not deleted_book:
         raise HTTPException(status_code=404, detail="Book not found")
@@ -62,13 +74,12 @@ def get_author(author_id: int):
 #@ADMIN ONLY
 @app.post("/authors")
 def add_author():
-
-    return {"add ": "new auhtor"}
+    return {"add ": "new author"}
 
 #@ADMIN ONLY
 @app.put("/authors/{author_id}")
 def update_author():
-    return {"add ": "new auhtor"}
+    return {"add ": "new author"}
 
 #@ADMIN ONLY
 @app.delete("/authors/{author_id}")
@@ -81,7 +92,7 @@ def add_user(user: User):
     success, message = register_user(user)
     if not success:
         raise HTTPException(status_code=400, detail=message)
-    
+
     # Retrieve the user details after successful registration
     registered_user = retrieve_single_user(user.email)
     if not registered_user:
@@ -105,7 +116,7 @@ async def auth_user(login_data: Login):
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user_info["email"]}, expires_delta=access_token_expires
+        data={"sub": user_info}, expires_delta=access_token_expires
     )
 
     return {
@@ -116,7 +127,7 @@ async def auth_user(login_data: Login):
 
 @app.get("/users/me")
 def get_user():
-    return {"retreive": "authed user"}
+    return {"retrieve": "authed user"}
 
 @app.put("/users/me")
 def update_user():
@@ -132,6 +143,3 @@ def get_recommendations(email: str):
 @app.get("/healthcheck")
 def health_check():
     return True
-
-
-

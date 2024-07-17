@@ -1,5 +1,4 @@
-
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, insert
 from app.database.connector import connect_to_db
 from app.database.Schemas.books import Book
 
@@ -11,8 +10,11 @@ def retrieve_single_book(id):
         with engine.connect() as conn:
             results = conn.execute(stmt)
             output = results.fetchone()
-            book = {"book_id": output[0], "title": output[1], "genre": output[2], "description": output[3], "year": output[4], "author": output[5]}
-        return book
+            if output:
+                book = {"book_id": output[0], "title": output[1], "genre": output[2], "description": output[3], "year": output[4], "author_id": output[5]}
+                return book
+            else:
+                return None
     except Exception as e:
         print(e)
         return None
@@ -26,10 +28,11 @@ def retrieve_books_from_db():
         stmt = select(Book.book_id, Book.title, Book.genre, Book.description, Book.year, Book.author_id)
         with engine.connect() as conn:
             results = conn.execute(stmt)
-            books = map(lambda result: {"book_id": result[0], "title": result[1], "genre": result[2], "description": result[3], "year": result[4], "author": result[5]}, results.fetchall()) 
-        return list(books)
+            books = [{"book_id": result[0], "title": result[1], "genre": result[2], "description": result[3], "year": result[4], "author_id": result[5]} for result in results.fetchall()]
+        return books
     except Exception as e:
         print(e)
+        return []
     finally:
         session.close()
 
@@ -45,6 +48,23 @@ def delete_book(book_id):
         print(e)
         session.rollback()
         return False
+    finally:
+        session.close()
+
+# add a book
+def add_book_to_db(book: Book):
+    print(book)  #testing
+    try:
+        engine, session = connect_to_db()
+        with session.begin():
+            stmt = insert(Book).values(title=book.title, genre=book.genre, description=book.description, year=book.year, author_id=book.author_id)
+            result = session.execute(stmt)
+            session.commit()
+            return result.inserted_primary_key[0]  # Returns the id of the new book
+    except Exception as e:
+        print(e)
+        session.rollback()
+        return None
     finally:
         session.close()
 
