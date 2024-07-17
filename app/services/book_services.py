@@ -1,8 +1,9 @@
 
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from app.database.connector import connect_to_db
 from app.database.Schemas.books import Book
 
+# get a book
 def retrieve_single_book(id):
     try:
         engine, session = connect_to_db()
@@ -14,9 +15,11 @@ def retrieve_single_book(id):
         return book
     except Exception as e:
         print(e)
+        return None
     finally:
         session.close()    
 
+# get all books
 def retrieve_books_from_db():
     try:
         engine, session = connect_to_db()
@@ -30,10 +33,24 @@ def retrieve_books_from_db():
     finally:
         session.close()
 
-if __name__ == "__main__":
-    print(retrieve_books_from_db())
-    print(retrieve_single_book(2))
+# delete a book 
+def delete_book(book_id):
+    try:
+        engine, session = connect_to_db()
+        with session.begin():
+            stmt = delete(Book).where(Book.book_id == book_id)
+            result = session.execute(stmt)
+            return result.rowcount > 0  # Returns True if a row was deleted, otherwise False
+    except Exception as e:
+        print(e)
+        session.rollback()
+        return False
+    finally:
+        session.close()
 
-
-
-
+# if __name__ == "__main__":
+#     print("hi")
+#     # Uncomment below lines for testing
+#     # print(retrieve_books_from_db())
+#     print(retrieve_single_book(29))
+#     print(delete_book(29))

@@ -1,5 +1,6 @@
+from fastapi import Depends, FastAPI, HTTPException, Request, logger
 from app.services.author_retrievals import retrieve_single_author, retrieve_authors_from_db
-from app.services.book_retrievals import retrieve_single_book, retrieve_books_from_db
+from app.services.book_services import retrieve_single_book, retrieve_books_from_db, delete_book as delete_book_from_db
 from app.schemas.login_info import Login
 from app.services.user_retrievals import retrieve_single_user
 from app.services.authenticate_user import authenticate_user
@@ -11,7 +12,6 @@ from uuid import UUID, uuid4
 from fastapi_sessions.backends.implementations import InMemoryBackend
 from app.schemas.user import User
 from app.services.user_registration import register_user
-from fastapi import Depends, FastAPI, HTTPException, Request, logger
 from datetime import timedelta
 
 app = FastAPI()
@@ -27,7 +27,10 @@ def get_books():
 
 @app.get("/books/{book_id}")
 def get_book(book_id: int):
-    return retrieve_single_book(book_id)
+    book = retrieve_single_book(book_id)
+    if book is None:
+        raise HTTPException(status_code=404, detail="Book not found")
+    return book
 
 #@ADMIN ONLY
 @app.post("/books")
@@ -41,8 +44,11 @@ def update_book():
 
 #@ADMIN ONLY
 @app.delete("/books/{book_id}")
-def delete_book():
-    return {"delete": "book"}
+def delete_book_route(book_id: int):
+    deleted_book = delete_book_from_db(book_id)
+    if not deleted_book:
+        raise HTTPException(status_code=404, detail="Book not found")
+    return {"message": "Book deleted successfully"}
 
 # HERE YOU WORK
 @app.get("/authors")
