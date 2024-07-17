@@ -1,4 +1,5 @@
 from app.services.author_retrievals import retrieve_single_author, retrieve_authors_from_db
+from app.services.book_retrievals import retrieve_single_book, retrieve_books_from_db
 from app.schemas.login_info import Login
 from app.services.user_retrievals import retrieve_single_user
 from app.services.authenticate_user import authenticate_user
@@ -22,11 +23,11 @@ def read_root():
 
 @app.get("/books")
 def get_books():
-    return {"ALl": "Books"}
+    return retrieve_books_from_db()
 
 @app.get("/books/{book_id}")
-def get_book():
-    return {"Specific": "Book by ID"}
+def get_book(book_id: int):
+    return retrieve_single_book(book_id)
 
 #@ADMIN ONLY
 @app.post("/books")
