@@ -1,5 +1,5 @@
 
-from sqlalchemy import select
+from sqlalchemy import select, update, delete
 from app.database.connector import connect_to_db
 from app.database.Schemas.books import Book
 
@@ -30,9 +30,63 @@ def retrieve_books_from_db():
     finally:
         session.close()
 
+
+
+
+def update_book_in_db(book_id: int, new_data: dict):
+    try:
+        engine, session = connect_to_db()
+        stmt = (
+            update(Book)
+            .where(Book.book_id == book_id)
+            .values(**new_data)
+            .returning(Book.book_id, Book.title, Book.genre, Book.description, Book.year, Book.author_id)
+        )
+        with engine.connect() as conn:
+            result = conn.execute(stmt)
+            updated_book = result.fetchone()
+        session.commit()
+        if updated_book:
+            book = {
+                "book_id": updated_book[0],
+                "title": updated_book[1],
+                "genre": updated_book[2],
+                "description": updated_book[3],
+                "year": updated_book[4],
+                "author_id": updated_book[5]
+            }
+            return book
+        else:
+            return None
+    except Exception as e:
+        print(e)
+        session.rollback()
+    finally:
+        session.close()
+
+def delete_book_from_db(book_id: int):
+    try:
+        engine, session = connect_to_db()
+        stmt = delete(Book).where(Book.book_id == book_id).returning(Book.book_id)
+        with engine.connect() as conn:
+            result = conn.execute(stmt)
+            deleted_book_id = result.fetchone()
+        session.commit()
+        if deleted_book_id:
+            return {"book_id": deleted_book_id[0]}
+        else:
+            return None
+    except Exception as e:
+        print(e)
+        session.rollback()
+    finally:
+        session.close()
+
 if __name__ == "__main__":
     print(retrieve_books_from_db())
     print(retrieve_single_book(2))
+    print(update_book_in_db(1, {"title": "New Title", "genre": "New Genre", "description": "New Description", "year": 2022, "author_id": 1}))
+    print(delete_book_from_db(1))
 
 
 

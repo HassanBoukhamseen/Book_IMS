@@ -11,4 +11,3 @@ class Book(Base):
     genre = Column("genre", String(30))
     description = Column("description", Text)
     year = Column("year", Integer)
-    author = relationship("Author")
