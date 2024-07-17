@@ -4,6 +4,7 @@ from app.database.Schemas.user import User
 from app.database.Schemas.author import Author
 from app.database.Schemas.books import Book
 from app.database.Schemas.preferences import Preferences
+from app.utils.hash import deterministic_hash
 import random
 
 
@@ -14,7 +15,7 @@ Base.metadata.create_all(engine)
 emails = [f"email_{i}@gmail.com" for i in range(30)]
 fnames = [f"fname_{i}" for i in range(30)]
 lnames = [f"lname_{i}" for i in range(30)]
-hashed_pws = [hash(f"password_{i}") for i in range(30)]
+hashed_pws = [deterministic_hash(f"password_{i}") for i in range(30)]
 roles = [0]*15 + [1]*15
 
 users_inserts = [User(email=email, fname=fname, lname=lname, hashed_pw=hashed_pw, role=role) for email, fname, lname, hashed_pw, role in zip(emails, fnames, lnames, hashed_pws, roles)]
@@ -38,7 +39,7 @@ session.add_all(books)
 
 session.commit()
 
-preferences = [[f"pref_{i}" for i in range(random.randint(3, 7))] for _ in range(30)]
+preferences = [list(set([f"genre_{random.randint(0, 29)}" for _ in range(random.randint(2, 7))])) for _ in range(30)]
 
 for i, user in enumerate(users_inserts):
     email = users_inserts[i].email
