@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 class Author(BaseModel):
-    author_id: Optional[int]
+    author_id: Optional[int] = None
     name: str
     biography: str
 

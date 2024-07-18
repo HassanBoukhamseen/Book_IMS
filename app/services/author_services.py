@@ -11,8 +11,11 @@ def retrieve_single_author(id):
         with engine.connect() as conn:
             results = conn.execute(stmt)
             output = results.fetchone()
-            author = {"author_id": output[0], "name": output[1], "biography": output[2]}
-        return True, "Author successfully retrieved", author
+            if output:
+                author = {"author_id": output[0], "name": output[1], "biography": output[2]}
+                return True, "Author successfully retrieved", author
+            else:
+                return False, "Author could not be retrieved", None
     except Exception as e:
         return False, e, None
     finally:
@@ -35,7 +38,6 @@ def add_author_to_database(author: pydantic_author):
     engine, session = connect_to_db()
     stmt_check_author_exists = select(Author.author_id).where(Author.author_id == author.author_id)
     stmt_add_author = Author(
-        author_id=author.author_id,
         name=author.name,
         biography=author.biography
     )
@@ -47,12 +49,13 @@ def add_author_to_database(author: pydantic_author):
                 return False, "Author already exists"
             session.add(stmt_add_author)
             session.commit()
+            author_id = stmt_add_author.author_id
+            return True, "Author added successfuly", author_id
     except Exception as e:
         print(e)
-        return False, e
+        return False, e, None
     finally:
         session.close()
-    return True, "Author added successfuly"
 
 def edit_author_info(author_id: int, new_author: AuthorUpdateCurrent):
     success, message, author = retrieve_single_author(author_id)
@@ -85,7 +88,7 @@ def edit_author_info(author_id: int, new_author: AuthorUpdateCurrent):
         session.close()
     return True, "Author information successfully changed"
 
-def delete_author(author_id: int):
+def delete_author_from_db(author_id: int):
     stmt = delete(Author).where(Author.author_id == author_id)
     try:
         engine, session = connect_to_db()

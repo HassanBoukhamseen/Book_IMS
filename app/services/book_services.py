@@ -4,6 +4,7 @@ from app.database.schemas.books import Book
 from app.database.schemas.preferences import Preferences
 from app.database.schemas.user import User
 from app.database.schemas.author import Author
+from app.services.author_services import retrieve_single_author
 
 def get_book_recommendations(email: str):
     try:
@@ -71,7 +72,10 @@ def delete_book_from_db(book_id):
         with session.begin():
             stmt = delete(Book).where(Book.book_id == book_id)
             result = session.execute(stmt)
-            return result.rowcount > 0, "Row deleted successfully"  # Returns True if a row was deleted, otherwise False
+            if result.rowcount > 0:
+                return True, "Book deleted successfully" 
+            else:
+                return False, "Book could not be deleted"
     except Exception as e:
         print(e)
         session.rollback()
@@ -80,24 +84,27 @@ def delete_book_from_db(book_id):
         session.close()
 
 def add_book_to_db(book: Book):
-    print(book)  #testing
+    success, message, author = retrieve_single_author(book.author_id)
+    if not success:
+        return success, message, None
+    
+    to_add = Book(
+        title=book.title, 
+        genre=book.genre, 
+        description=book.description, 
+        year=book.year, 
+        author_id=book.author_id
+    )
+    
+    engine, session = connect_to_db()
     try:
-        engine, session = connect_to_db()
-        stmt = (
-                    insert(Book)
-                    .values(
-                        title=book.title, 
-                        genre=book.genre, 
-                        description=book.description, 
-                        year=book.year, author_id=book.author_id
-                    )
-                )
-        with engine.connect() as conn:
-            conn.execute(stmt)
-            session.commit()
+        session.add(to_add)
+        session.commit()
+        book_id = to_add.book_id
+        return True, "Book added Successfully", book_id
     except Exception as e:
         session.rollback()
-        return False, e
+        return False, e, None
     finally:
         session.close()
-        return True, "Book added Successfully"
+        
