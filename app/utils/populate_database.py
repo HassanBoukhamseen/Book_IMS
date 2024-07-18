@@ -6,6 +6,8 @@ from app.database.schemas.books import Book
 from app.database.schemas.preferences import Preferences
 from app.utils.hash import deterministic_hash
 import random
+from app.database.schemas.logs import RequestLog
+from datetime import datetime
 
 
 metadata = MetaData()
@@ -35,6 +37,15 @@ years = [i for i in range(1990, 2020)]
 
 books = [Book(author_id=author_id, title=title, genre=genre, description=description, year=year) for author_id, title, genre, description, year in zip(author_ids, titles, genres, descriptions, years)]
 session.add_all(books)
+
+request_logs = [
+    RequestLog(endpoint="/books", method="GET", request_body=None, timestamp=datetime.utcnow()),
+    RequestLog(endpoint="/authors", method="GET", request_body=None, timestamp=datetime.utcnow()),
+    RequestLog(endpoint="/books/1", method="GET", request_body=None, timestamp=datetime.utcnow()),
+    RequestLog(endpoint="/authors/1", method="GET", request_body=None, timestamp=datetime.utcnow()),
+    RequestLog(endpoint="/books", method="POST", request_body='{"title": "New Book", "author_id": 1, "genre": "genre_0", "description": "A new book", "year": 2021}', timestamp=datetime.utcnow())
+]
+session.add_all(request_logs)
 
 session.commit()
 
