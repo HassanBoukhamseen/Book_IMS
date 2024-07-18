@@ -7,19 +7,20 @@ def test_client():
     client = TestClient(app)
     yield client
 
+@pytest.fixture(scope="module")
 def test_register_user(test_client):
     response = test_client.post("/users/register", json={
-        "email": "testuser@example.com",
-        "username": "testuser",
-        "password": "password123"
+        "username": "email_15@gmail.com",
+        "password": "password_15"
     })
     assert response.status_code == 200
     assert "message" in response.json()
 
+@pytest.fixture(scope="module")
 def test_login_user(test_client):
     response = test_client.post("/users/login", json={
-        "username": "testuser",
-        "password": "password123"
+        "username": "email_15@gmail.com",
+        "password": "password_15"
     })
     assert response.status_code == 200
     assert "access_token" in response.json()
@@ -28,8 +29,8 @@ def test_login_user(test_client):
 def test_get_current_user(test_client):
     # First, login to get the token
     login_response = test_client.post("/users/login", json={
-        "username": "testuser",
-        "password": "password123"
+        "username": "email_15@gmail.com",
+        "password": "password_15"
     })
     access_token = login_response.json()["access_token"]
 
@@ -41,10 +42,9 @@ def test_get_current_user(test_client):
     assert response.json()["user"]["username"] == "testuser"
 
 def test_update_current_user(test_client):
-    # First, login to get the token
     login_response = test_client.post("/users/login", json={
-        "username": "testuser",
-        "password": "password123"
+        "username": "email_15@gmail.com",
+        "password": "password_15"
     })
     access_token = login_response.json()["access_token"]
 
@@ -61,7 +61,7 @@ def test_update_current_user(test_client):
 def test_get_book_recommendations(test_client):
     # First, login to get the token
     login_response = test_client.post("/users/login", json={
-        "username": "testuser",
+        "username": "email_15@gmail.com",
         "password": "password123"
     })
     access_token = login_response.json()["access_token"]
