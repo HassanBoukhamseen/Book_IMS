@@ -40,7 +40,10 @@ def read_root():
 
 @app.get("/books")
 def get_books():
-    return retrieve_books_from_db()
+    success, message, books = retrieve_books_from_db()
+    if not success:
+        raise HTTPException(status_code=401, detail=message)
+    return {"message": message, "books": books}
 
 @app.get("/books/{book_id}")
 def get_book(book_id: int):
