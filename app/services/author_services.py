@@ -45,8 +45,6 @@ def add_author_to_database(author: pydantic_author):
         with engine.connect() as conn:
             results = conn.execute(stmt_check_author_exists)
             output = results.fetchone()
-            if output:
-                return False, "Author already exists"
             session.add(stmt_add_author)
             session.commit()
             author_id = stmt_add_author.author_id

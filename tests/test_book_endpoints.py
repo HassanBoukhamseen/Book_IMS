@@ -43,7 +43,7 @@ def test_get_book(auth_headers):
 def test_add_book(admin_auth_headers):
     new_book = {
         "title": "New book", 
-        "author_id": 22,
+        "author_id": "22",
         "genre": "genre_20",
         "description": "some_description",
         "year": 2020
@@ -59,7 +59,7 @@ def test_add_book(admin_auth_headers):
 def test_update_book(admin_auth_headers):
     new_book = {
         "title": "New book", 
-        "author_id": 22,
+        "author_id": "22",
         "genre": "genre_20",
         "description": "some_description",
         "year": 2020
@@ -70,12 +70,13 @@ def test_update_book(admin_auth_headers):
 
     updated_book = {
         "title": "updated book", 
-        "author_id": 22,
+        "author_id": "22",
         "genre": "genre_20",
         "description": "some_description",
         "year": 2020
     }
     response = client.put(f"/books/{book_id}", json=updated_book, headers=admin_auth_headers)
+    print(response.json())
     assert response.status_code == 200
 
     response = client.get(f"/books/{book_id}", headers=admin_auth_headers)
@@ -85,7 +86,7 @@ def test_update_book(admin_auth_headers):
 def test_delete_book(admin_auth_headers):
     new_book = {
         "title": "New book", 
-        "author_id": 22,
+        "author_id": "22",
         "genre": "genre_20",
         "description": "some_description",
         "year": 2020

@@ -7,7 +7,7 @@ def test_client():
     client = TestClient(app)
     yield client
 
-@pytest.fixture(scope="module")
+# @pytest.fixture(scope="module")
 def test_register_user(test_client):
     response = test_client.post("/users/register", json={
         "username": "email_15@gmail.com",
@@ -16,7 +16,7 @@ def test_register_user(test_client):
     assert response.status_code == 200
     assert "message" in response.json()
 
-@pytest.fixture(scope="module")
+# @pytest.fixture(scope="module")
 def test_login_user(test_client):
     response = test_client.post("/users/login", json={
         "username": "email_15@gmail.com",
@@ -27,7 +27,7 @@ def test_login_user(test_client):
     assert response.json()["token_type"] == "bearer"
 
 def test_get_current_user(test_client):
-    # First, login to get the token
+    
     login_response = test_client.post("/users/login", json={
         "username": "email_15@gmail.com",
         "password": "password_15"

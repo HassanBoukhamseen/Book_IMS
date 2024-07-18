@@ -42,6 +42,7 @@ def test_add_author(admin_auth_headers):
     new_author = {"name": "New Author", "biography": "Bio of new author"}
     response = client.post("/authors", json=new_author, headers=admin_auth_headers)
     assert response.status_code == 200
+    print(response.json())
     author_id = response.json()["author_id"]
 
     response = client.get(f"/authors/{author_id}", headers=admin_auth_headers)

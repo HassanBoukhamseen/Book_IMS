@@ -16,12 +16,14 @@ from app.services.book_services import (
     retrieve_single_book, 
     retrieve_books_from_db, 
     add_book_to_db, 
-    delete_book_from_db
+    delete_book_from_db,
+    edit_book_info
 )
 from app.services.token_services import create_access_token
 
 from app.schemas.login_info import Login
 from app.schemas.author import Author, AuthorUpdateCurrent
+from app.schemas.book import BookUpdateCurrent
 from app.schemas.user import User, UserUpdateCurrent
 from app.schemas.book import Book
 
@@ -64,8 +66,14 @@ def add_book(book: Book, current_user: Annotated[dict, Depends(get_current_user)
 
 #@ADMIN ONLY
 @app.put("/books/{book_id}")
-def update_book():
-    return {"update": "existing book"}
+def update_book(book_id:int, new_book:BookUpdateCurrent, current_user: dict = Depends(get_current_user)):
+    if not current_user or current_user["role"] != 1:
+        return HTTPException(status_code=403, detail="Not autherized")
+    success, message = edit_book_info(book_id, new_book)
+    if not success:
+        return HTTPException(status_code=400, detail=message)               
+    return {"message": message, "book_id": book_id}
+
 
 #@ADMIN ONLY
 @app.delete("/books/{book_id}")
