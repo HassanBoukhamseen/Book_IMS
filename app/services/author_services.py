@@ -21,18 +21,20 @@ def retrieve_single_author(id):
     finally:
         session.close()
 
-def retrieve_authors_from_db():
+def retrieve_authors_from_db(page: int = 1, per_page: int = 10):
     try:
         engine, session = connect_to_db()
-        stmt = select(Author.author_id, Author.name, Author.biography)
+        offset = (page - 1) * per_page
+        stmt = select(Author.author_id, Author.name, Author.biography).offset(offset).limit(per_page)
         with engine.connect() as conn:
             results = conn.execute(stmt)
-            authors = map(lambda result: {"author_id": result[0], "name": result[1], "biography": result[2]}, results.fetchall())
-            return True, "Authors successfully retrieved", list(authors)
+            authors = [{"author_id": result[0], "name": result[1], "biography": result[2]} for result in results.fetchall()]
+        return True, "Authors successfully retrieved", authors
     except Exception as e:
         return False, e, None
     finally:
         session.close()
+
     
 def add_author_to_database(author: pydantic_author):
     engine, session = connect_to_db()
