@@ -1,9 +1,8 @@
-# app/middleware/request_logger.py
 from fastapi import Request, FastAPI
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.types import ASGIApp, Receive, Scope, Send
+from starlette.types import ASGIApp
 from app.database.connector import connect_to_db
-from app.database.Schemas.logs import RequestLog
+from app.database.schemas.logs import RequestLog
 
 class RequestLoggerMiddleware(BaseHTTPMiddleware):
     def __init__(self, app: ASGIApp) -> None:
@@ -12,11 +11,9 @@ class RequestLoggerMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         request_body = await request.body()
 
-        # Replace the request stream with the original body
         async def receive() -> dict:
             return {"type": "http.request", "body": request_body, "more_body": False}
 
-        # Save the original receive function
         original_receive = request._receive
         request._receive = receive
 

@@ -12,6 +12,7 @@ sqlalchemy = "^2.0.31"
 psycopg2 = "^2.9.9"
 fastapi-sessions = "^0.3.2"
 pyjwt = "^2.8.0"
+pytest = "^8.2.2"
 
 
 [build-system]

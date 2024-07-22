@@ -1,11 +1,13 @@
 from sqlalchemy import MetaData, text
-from app.database.Schemas.base import engine, session, Base
-from app.database.Schemas.user import User
-from app.database.Schemas.author import Author
-from app.database.Schemas.books import Book
-from app.database.Schemas.preferences import Preferences
+from app.database.schemas.base import engine, session, Base
+from app.database.schemas.user import User
+from app.database.schemas.author import Author
+from app.database.schemas.books import Book
+from app.database.schemas.preferences import Preferences
 from app.utils.hash import deterministic_hash
 import random
+from app.database.schemas.logs import RequestLog
+from datetime import datetime
 
 
 metadata = MetaData()
@@ -21,25 +23,33 @@ roles = [0]*15 + [1]*15
 users_inserts = [User(email=email, fname=fname, lname=lname, hashed_pw=hashed_pw, role=role) for email, fname, lname, hashed_pw, role in zip(emails, fnames, lnames, hashed_pws, roles)]
 session.add_all(users_inserts)
 
-author_ids = [i for i in range(30)]
+author_ids = [i for i in range(1, 31)]
 names = [f"name_{i}" for i in range(30)]
 biographies = [f"some_biography_{i}" for i in range(30)]
 
-authors = [Author(author_id=author_id, name=name, biography=biography) for author_id, name, biography in zip(author_ids, names, biographies)]
+authors = [Author(name=name, biography=biography) for name, biography in zip(names, biographies)]
 session.add_all(authors)
 
-book_ids = [i for i in range(30)]
 titles = [f"title_{i}" for i in range(30)]
 genres = [f"genre_{i}" for i in range(30)]
 descriptions = [f"some_description_{i}" for i in range(30)]
 years = [i for i in range(1990, 2020)]
 
-books = [Book(book_id=book_id, author_id=author_id, title=title, genre=genre, description=description, year=year) for book_id, author_id, title, genre, description, year in zip(book_ids, author_ids, titles, genres, descriptions, years)]
+books = [Book(author_id=author_id, title=title, genre=genre, description=description, year=year) for author_id, title, genre, description, year in zip(author_ids, titles, genres, descriptions, years)]
 session.add_all(books)
+
+request_logs = [
+    RequestLog(endpoint="/books", method="GET", request_body=None, timestamp=datetime.utcnow()),
+    RequestLog(endpoint="/authors", method="GET", request_body=None, timestamp=datetime.utcnow()),
+    RequestLog(endpoint="/books/1", method="GET", request_body=None, timestamp=datetime.utcnow()),
+    RequestLog(endpoint="/authors/1", method="GET", request_body=None, timestamp=datetime.utcnow()),
+    RequestLog(endpoint="/books", method="POST", request_body='{"title": "New Book", "author_id": 1, "genre": "genre_0", "description": "A new book", "year": 2021}', timestamp=datetime.utcnow())
+]
+session.add_all(request_logs)
 
 session.commit()
 
-preferences = [[f"pref_{i}" for i in range(random.randint(3, 7))] for _ in range(30)]
+preferences = [list(set([f"genre_{random.randint(0, 29)}" for _ in range(random.randint(2, 7))])) for _ in range(30)]
 
 for i, user in enumerate(users_inserts):
     email = users_inserts[i].email
