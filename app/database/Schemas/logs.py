@@ -1,7 +1,6 @@
-# app/database/Schemas/logs.py
 from sqlalchemy import Column, String, Integer, DateTime, Text, Sequence
 from datetime import datetime
-from app.database.Schemas.base import Base
+from app.database.schemas.base import Base
 
 class RequestLog(Base):
     __tablename__ = 'request_logs'
