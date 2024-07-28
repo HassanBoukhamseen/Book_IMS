@@ -57,16 +57,17 @@ def retrieve_books_from_db(page: int = 1, per_page: int = 10):
     try:
         engine, session = connect_to_db()
         offset = (page - 1) * per_page
-        stmt = select(Book.book_id, Book.title, Book.genre, Book.description, Book.year, Book.author_id).offset(offset).limit(per_page)
+        stmt = select(Book.book_id, Book.title, Book.genre, Book.description, Book.year, Book.author_id, Book.thumbnail).offset(offset).limit(per_page)
         with engine.connect() as conn:
             results = conn.execute(stmt)
-            books = [{"book_id": result[0], "title": result[1], "genre": result[2], "description": result[3], "year": result[4], "author_id": result[5]} for result in results.fetchall()]
+            books = [{"book_id": result[0], "title": result[1], "genre": result[2], "description": result[3], "year": result[4], "author_id": result[5], "thumbnail": result[6]} for result in results.fetchall()]
         return True, "Books retrieved successfully", books
     except Exception as e:
         print(e)
         return False, e, None
     finally:
         session.close()
+
 
 
 def delete_book_from_db(book_id):

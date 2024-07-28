@@ -48,14 +48,29 @@ def read_root(current_user: Annotated[dict, Depends(get_current_user)]):
         return HTTPException(status_code=403, detail="Invalid Authorization")
     return {"Hello": "World"}
 
+
+
+from fastapi.middleware.cors import CORSMiddleware
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  #todo specify origins 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.get("/books")
-def get_books(current_user: Annotated[dict, Depends(get_current_user)]):
+def get_books(current_user: Annotated[dict, Depends(get_current_user)], page: int = 1, per_page: int = 18):
     if not current_user:
-        return HTTPException(status_code=403, detail="Invalid Authorization")
-    success, message, books = retrieve_books_from_db()
+        raise HTTPException(status_code=403, detail="Invalid Authorization")
+    success, message, books = retrieve_books_from_db(page, per_page)
     if not success:
         raise HTTPException(status_code=401, detail=message)
-    return {"message": message, "books": books}
+    return {"message": message, "books": books, "page": page, "per_page": per_page}
+
+
 
 @app.get("/books/{book_id}")
 def get_book(book_id: int, current_user: Annotated[dict, Depends(get_current_user)]):

@@ -5,9 +5,11 @@ from app.database.schemas.base import Base
 class Book(Base):
     __tablename__ = 'books'
     book_id = Column("book_id", Integer, primary_key=True, autoincrement=True)
-    author_id = Column("author_id", Integer, ForeignKey('authors.author_id'))
+    author_id = Column("author_id", Integer)
     title = Column("title", String(512))
     genre = Column("genre", String(512))
     description = Column("description", Text)
     year = Column("year", Integer)
-    author = relationship("Author")
+    thumbnail = Column("thumbnail", String(512))  # New column
+
+
