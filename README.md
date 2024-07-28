@@ -1,6 +1,6 @@
 # README
 
-## Endpoints Explanation
+## Running This Project
 
 To run this project, first cd into the backend directory. Then, within your backend directory, run the following to install all dependancies
 
