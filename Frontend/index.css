@@ -1,0 +1,157 @@
+* {
+    font-family: Montserrat;
+}
+
+/**HEADER STYLING**/
+
+header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    border: none;
+}
+
+#logo-area {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    width: 300px;
+}
+
+#logo {
+    width: 70px;
+    height: 70px;
+    border-radius: 20px;
+    margin-left: 5%;
+    margin-right: 5%;
+}
+
+#pages {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    width: 500px;
+}
+
+.page {
+    list-style: none;
+    margin: 2%;
+}
+
+hr {
+    border: 0.5px solid gray;
+    width: 95%;
+    margin-top: 1%;
+}
+
+/**MAIN CONTENT STYLING**/
+
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/**SEARCH BAR STYLING**/
+
+.search {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    width: 90%;
+    height: 40px;
+    margin-top: 1%;
+}
+
+#search-bar {
+    width: 70%;
+    height: 100%;
+    border: 1px solid gray;
+}
+
+#search-button {
+    height: 100%;
+    border: 1px solid rgb(46, 47, 48);
+    background-color: rgb(46, 47, 48);
+    color: white;
+}
+
+#intro-banner {
+    margin: 1%;
+}
+
+/**BOOK STYLING**/
+
+#book-display {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+}
+
+.book {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+    margin: 2%;
+    padding: 1%;
+    border: 0.5px solid rgb(197, 200, 203);
+    border-radius: 10px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1), 0 6px 16px 0 rgba(0, 0, 0, 0.08);
+    transition: 0.2s ease-in-out;
+    width: 15%;
+}
+
+.book:hover {
+    transform: scale(1.1);
+    cursor: pointer;
+}
+
+.book-img {
+    width: 220px;
+    height: 320px;
+    background-color: gray;
+    border-radius: 3px;
+}
+
+.book-title {
+    margin: 10%;
+    text-align: center;
+    font-weight: bold;
+    font-size: large;
+}
+
+/**Page Navigation Buttons Style**/
+#page-buttons {
+    display: flex;
+    flex-direction: row;
+    margin-left: auto;
+    margin-right: auto;
+    justify-content: space-evenly;
+    margin-top: 5%;
+    margin-bottom: 5%;
+}
+
+.page-button {
+    background-color: white;
+    width: 45px;
+    height: 35px;
+    font-weight: bold;
+    font-size: large;
+    color:rgb(99, 99, 100);
+    border: 0.5px solid rgb(197, 200, 203);
+    border-radius: 3px;
+    box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.1), 0 4px 10px 0 rgba(0, 0, 0, 0.08);
+    margin: 2%; 
+}
+
+.page-button:hover {
+    cursor: pointer;
+}
