@@ -30,9 +30,15 @@ from app.schemas.book import Book
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.utils.get_current_user import get_current_user
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from typing import Annotated
 from datetime import timedelta
+import uvicorn
+from sse_starlette.sse import EventSourceResponse
+
+#min
+from fastapi.responses import StreamingResponse
+
 
 app = FastAPI()
 
@@ -198,6 +204,42 @@ def get_recommendations(current_user: Annotated[dict, Depends(get_current_user)]
 @app.get("/healthcheck")
 def health_check():
     return True
+
+
+
+
+from fastapi import FastAPI, Request
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
+from app.utils.chatbot import get_response, get_combined_query
+from app.utils.recommendations import get_recommended_books
+import asyncio
+
+app = FastAPI()
+
+class ChatRequest(BaseModel):
+    message: str
+    session_id: str = "1"
+
+@app.post("/chat")
+async def chat_endpoint(chat_request: ChatRequest):
+    user_input = chat_request.message
+    session_id = chat_request.session_id
+    combined = get_combined_query(user_input)
+    async def response_streamer():
+        tokens = get_response(combined, session_id)
+        for token in tokens:
+            yield token
+            await asyncio.sleep(0.01)
+
+    return StreamingResponse(response_streamer(), media_type="text/plain")
+
+@app.post("/booksretrievals")
+def booksretrievals(chat_request: ChatRequest):
+    user_input = chat_request.message
+    books = get_recommended_books(user_input)
+    return books
+
 
 
 
