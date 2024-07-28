@@ -2,13 +2,7 @@
 
 ## Endpoints Explanation
 
-To run this project, first create a poetry environment with 
-
-```
-poetry new <project>
-```
-
-Then, within your project dir, run the following to install all dependancies
+To run this project, first cd into the backend directory. Then, within your backend directory, run the following to install all dependancies
 
 ```
 poetry shell
@@ -19,6 +13,8 @@ Finally, run the following command to turn on the server
 ```
 fastapi dev api.py
 ```
+
+To open the frontend, simply open `index.html` in a web browser.
 
 ## Endpoints Explanation
 
