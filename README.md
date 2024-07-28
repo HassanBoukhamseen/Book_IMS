@@ -2,6 +2,26 @@
 
 ## Endpoints Explanation
 
+To run this project, first create a poetry environment with 
+
+```
+poetry new <project>
+```
+
+Then, within your project dir, run the following to install all dependancies
+
+```
+poetry shell
+poetry install
+```
+
+Finally, run the following command to turn on the server
+```
+fastapi dev api.py
+```
+
+## Endpoints Explanation
+
 This document provides brief explanations of the various endpoints available in the application.
 
 ### Author Services
