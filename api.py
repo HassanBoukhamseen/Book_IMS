@@ -26,11 +26,14 @@ from app.schemas.author import Author, AuthorUpdateCurrent
 from app.schemas.book import BookUpdateCurrent
 from app.schemas.user import User, UserUpdateCurrent
 from app.schemas.book import Book
+from app.schemas.query import UserMessage
 
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.utils.get_current_user import get_current_user
+from app.utils.llm import get_llm_response
 
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
 from typing import Annotated
 from datetime import timedelta
 
@@ -194,6 +197,13 @@ def get_recommendations(current_user: Annotated[dict, Depends(get_current_user)]
     if not success:
         raise HTTPException(status_code=400, detail=message)
     return {"message": message, "book_recommendations": book_recommendations}
+
+@app.get("/llm_recommendation")
+def get_response(message: UserMessage):
+    # if not current_user:
+    #     return HTTPException(status_code=403, detail="Invalid Authorization")
+    response_generator = get_llm_response(message.user_message)
+    return StreamingResponse(response_generator)
 
 @app.get("/healthcheck")
 def health_check():
