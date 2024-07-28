@@ -26,29 +26,38 @@ from app.schemas.author import Author, AuthorUpdateCurrent
 from app.schemas.book import BookUpdateCurrent
 from app.schemas.user import User, UserUpdateCurrent
 from app.schemas.book import Book
+from app.schemas.query import UserMessage
 
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.utils.get_current_user import get_current_user
+from app.utils.llm import get_llm_response
 
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
 from typing import Annotated
 from datetime import timedelta
 
 app = FastAPI()
 
 @app.get("/")
-def read_root():
+def read_root(current_user: Annotated[dict, Depends(get_current_user)]):
+    if not current_user:
+        return HTTPException(status_code=403, detail="Invalid Authorization")
     return {"Hello": "World"}
 
 @app.get("/books")
-def get_books():
+def get_books(current_user: Annotated[dict, Depends(get_current_user)]):
+    if not current_user:
+        return HTTPException(status_code=403, detail="Invalid Authorization")
     success, message, books = retrieve_books_from_db()
     if not success:
         raise HTTPException(status_code=401, detail=message)
     return {"message": message, "books": books}
 
 @app.get("/books/{book_id}")
-def get_book(book_id: int):
+def get_book(book_id: int, current_user: Annotated[dict, Depends(get_current_user)]):
+    if not current_user:
+        return HTTPException(status_code=403, detail="Invalid Authorization")
     success, message, book = retrieve_single_book(book_id)
     if not success:
         raise HTTPException(status_code=404, detail=message)
@@ -57,7 +66,7 @@ def get_book(book_id: int):
 #@ADMIN ONLY
 @app.post("/books")
 def add_book(book: Book, current_user: Annotated[dict, Depends(get_current_user)]):
-    if current_user["role"] != 1:
+    if not current_user or current_user["role"] != 1:
         raise HTTPException(status_code=403, detail="Not Authorized")
     success, message, book_id = add_book_to_db(book)
     if not success:
@@ -138,7 +147,6 @@ def add_user(user: User):
         raise HTTPException(status_code=400, detail=message)
     return {"message": message, "user": user.email}
 
-#Still need JWT stuff
 @app.post("/users/login")
 async def auth_user(login_data: Login):
     auth, message = authenticate_user(login_data.username, login_data.password)
@@ -161,10 +169,14 @@ async def auth_user(login_data: Login):
 
 @app.get("/users/me")
 def get_user(current_user: Annotated[dict, Depends(get_current_user)]):
+    if not current_user:
+        return HTTPException(status_code=403, detail="Invalid Authorization")
     return {"user": current_user}
 
 @app.put("/users/me")
 async def update_user(user_update: UserUpdateCurrent, current_user: Annotated[dict, Depends(get_current_user)]):
+    if not current_user:
+        return HTTPException(status_code=403, detail="Invalid Authorization")
     email = current_user["email"]
     success, message = edit_user_info(email, user_update)
     if not success:
@@ -178,11 +190,20 @@ async def update_user(user_update: UserUpdateCurrent, current_user: Annotated[di
 
 @app.get("/recommendations")
 def get_recommendations(current_user: Annotated[dict, Depends(get_current_user)]):
+    if not current_user:
+        return HTTPException(status_code=403, detail="Invalid Authorization")
     email = current_user["email"]
     success, message, book_recommendations = get_book_recommendations(email)
     if not success:
         raise HTTPException(status_code=400, detail=message)
     return {"message": message, "book_recommendations": book_recommendations}
+
+@app.get("/llm_recommendation")
+def get_response(message: UserMessage):
+    # if not current_user:
+    #     return HTTPException(status_code=403, detail="Invalid Authorization")
+    response_generator = get_llm_response(message.user_message)
+    return StreamingResponse(response_generator)
 
 @app.get("/healthcheck")
 def health_check():

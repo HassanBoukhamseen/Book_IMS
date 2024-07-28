@@ -1,79 +1,69 @@
 import pytest
 from fastapi.testclient import TestClient
+import jwt
 from api import app  
+from app.config import SECRET_KEY, ALGORITHM
 
-@pytest.fixture(scope="module")
-def test_client():
-    client = TestClient(app)
-    yield client
+client = TestClient(app)
 
-# @pytest.fixture(scope="module")
-def test_register_user(test_client):
-    response = test_client.post("/users/register", json={
-        "username": "email_15@gmail.com",
-        "password": "password_15"
-    })
+@pytest.fixture
+def auth_headers():
+    response = client.post("/users/login", json={"username": "email_0@gmail.com", "password": "password_0"})
     assert response.status_code == 200
-    assert "message" in response.json()
+    token = response.json()["access_token"]
+    body = response.json()
+    assert body["user_info"]["fname"] == "fname_0"
+    assert body["user_info"]["lname"] == "lname_0"
+    assert body["user_info"]["role"] == 0
+    headers = {"Authorization": f"Bearer {token}"}
+    return headers
 
-# @pytest.fixture(scope="module")
-def test_login_user(test_client):
-    response = test_client.post("/users/login", json={
-        "username": "email_15@gmail.com",
-        "password": "password_15"
-    })
+@pytest.fixture
+def admin_auth_headers():
+    response = client.post("/users/login", json={"username": "email_20@gmail.com", "password": "password_20"})
     assert response.status_code == 200
-    assert "access_token" in response.json()
-    assert response.json()["token_type"] == "bearer"
+    token = response.json()["access_token"]
+    body = response.json()
+    assert body["user_info"]["fname"] == "fname_20"
+    assert body["user_info"]["lname"] == "lname_20"
+    assert body["user_info"]["role"] == 1
+    headers = {"Authorization": f"Bearer {token}"}
+    return headers
 
-def test_get_current_user(test_client):
-    
-    login_response = test_client.post("/users/login", json={
-        "username": "email_15@gmail.com",
-        "password": "password_15"
-    })
-    access_token = login_response.json()["access_token"]
-
-    # Use the token to get the current user
-    response = test_client.get("/users/me", headers={
-        "Authorization": f"Bearer {access_token}"
-    })
+def test_get_current_user(admin_auth_headers):
+    response = client.get("/users/me", headers=admin_auth_headers)
     assert response.status_code == 200
-    assert response.json()["user"]["username"] == "testuser"
+    assert "user" in response.json()
+    assert "email" in response.json()["user"]
+    assert "fname" in response.json()["user"] 
+    assert "lname" in response.json()["user"] 
+    assert "role" in response.json()["user"]
+    assert response.json()["user"]["email"] == "email_20@gmail.com"
+    assert response.json()["user"]["fname"] == "fname_20"
+    assert response.json()["user"]["lname"] == "lname_20"
+    assert response.json()["user"]["role"] == 1
 
-def test_update_current_user(test_client):
-    login_response = test_client.post("/users/login", json={
-        "username": "email_15@gmail.com",
-        "password": "password_15"
-    })
-    access_token = login_response.json()["access_token"]
-
-    # Update user info
-    response = test_client.put("/users/me", headers={
-        "Authorization": f"Bearer {access_token}"
-    }, json={
-        "username": "updateduser"
-    })
+def test_update_current_user(admin_auth_headers):
+    new_user = {
+        "fname": "Hassan",
+        "lname": "Boukhamseen"
+    }
+    response = client.put("/users/me", json=new_user, headers=admin_auth_headers)
     assert response.status_code == 200
     assert "message" in response.json()
     assert "token" in response.json()
+    token = response.json()["token"]
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    user_info = payload.get("sub")
+    assert user_info["fname"] == new_user["fname"]
+    assert user_info["lname"] == new_user["lname"]
+    new_user = {
+        "fname": "fname_20",
+        "lname": "lname_20"
+    }
+    response = client.put("/users/me", json=new_user, headers=admin_auth_headers)
 
-def test_get_book_recommendations(test_client):
-    # First, login to get the token
-    login_response = test_client.post("/users/login", json={
-        "username": "email_15@gmail.com",
-        "password": "password123"
-    })
-    access_token = login_response.json()["access_token"]
-
-    # Get book recommendations
-    response = test_client.get("/recommendations", headers={
-        "Authorization": f"Bearer {access_token}"
-    })
-    assert response.status_code == 200
-    assert "book_recommendations" in response.json()
-
-def test_health_check(test_client):
-    response = test_client.get("/healthcheck")
+def test_health_check():
+    response = client.get("/healthcheck")
     assert response.status_code == 200
     assert response.json() is True

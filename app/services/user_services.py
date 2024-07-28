@@ -7,7 +7,7 @@ from fastapi import HTTPException
 def retrieve_single_user(id):
     try:
         engine, session = connect_to_db()
-        stmt = select(User.email, User.fname, User.lname, User.role).where(User.email == id)
+        stmt = select(User.email, User.fname, User.lname, User.role, User.hashed_pw).where(User.email == id)
         with engine.connect() as conn:
             results = conn.execute(stmt)
             output = results.fetchone()
@@ -17,6 +17,7 @@ def retrieve_single_user(id):
                     "fname": output[1],
                     "lname": output[2],
                     "role": output[3],
+                    "password": output[4]
                 }
                 return True, "User retrieved sucessfully", user
             else:
@@ -70,7 +71,7 @@ def register_user(user_data):
             output = results.fetchone()
             if output is not None:
                 return False, "User already registered"
-        hashed_pw = deterministic_hash(user_data.password)
+        hashed_pw = deterministic_hash(user_data.hashedpw)
         new_user = User(
             email=user_data.email,
             fname=user_data.fname,
