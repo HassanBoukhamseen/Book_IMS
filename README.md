@@ -101,3 +101,12 @@ Books Retrieval
 
 POST /booksretrievals
 Retrieves books based on user input.
+
+# Some samples:
+
+<img width="793" alt="Screenshot 1446-01-22 at 9 43 40 AM" src="https://github.com/user-attachments/assets/d1d6928a-480f-4712-b9f8-0da251b89551">
+
+<img width="600" alt="Screenshot 1446-01-22 at 9 48 07 AM" src="https://github.com/user-attachments/assets/f352c91d-cfe3-4ba6-96ec-bcff9c38bd1f">
+
+
+
