@@ -207,16 +207,15 @@ def health_check():
 
 
 
-
-from fastapi import FastAPI, Request
+########################################
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from app.utils.chatbot import get_response, get_combined_query
 from app.utils.recommendations import get_recommended_books
 import asyncio
 
-app = FastAPI()
 
+# TODO: GRAB USER SESSION 
 class ChatRequest(BaseModel):
     message: str
     session_id: str = "1"
