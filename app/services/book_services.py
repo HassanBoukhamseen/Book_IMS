@@ -1,4 +1,4 @@
-from sqlalchemy import select, delete, insert, update
+from sqlalchemy import select, delete, insert, update, or_  
 from app.database.connector import connect_to_db
 from app.database.schemas.books import Book
 from app.database.schemas.preferences import Preferences
@@ -44,30 +44,41 @@ def retrieve_single_book(id):
                     "year": output[4], 
                     "author_id": output[5]
                 }
-                return True, "Book retreived successfully", book
+                return True, "Book retrieved successfully", book
             else:
-                return False, "Error ocurred", None
+                return False, "Error occurred", None
     except Exception as e:
         print(e)
         return False, e, None
     finally:
         session.close()    
 
-def retrieve_books_from_db(page: int = 1, per_page: int = 10):
+def retrieve_books_from_db(page: int, per_page: int, search: str = None):
     try:
         engine, session = connect_to_db()
-        offset = (page - 1) * per_page
-        stmt = select(Book.book_id, Book.title, Book.genre, Book.description, Book.year, Book.author_id, Book.thumbnail).offset(offset).limit(per_page)
-        with engine.connect() as conn:
-            results = conn.execute(stmt)
-            books = [{"book_id": result[0], "title": result[1], "genre": result[2], "description": result[3], "year": result[4], "author_id": result[5], "thumbnail": result[6]} for result in results.fetchall()]
+        query = session.query(Book)
+        
+        if search:
+            search_term = f"%{search}%"
+            query = query.filter(
+                or_(
+                    Book.title.ilike(search_term),
+                    Book.genre.ilike(search_term),
+                    Book.author_name.ilike(search_term)
+                )
+            )
+        
+        total_books = query.count()
+        books = query.offset((page - 1) * per_page).limit(per_page).all()
+        
+        if not books:
+            return False, "No books found", []
+
         return True, "Books retrieved successfully", books
     except Exception as e:
-        print(e)
-        return False, e, None
+        return False, str(e), []
     finally:
         session.close()
-
 
 
 def delete_book_from_db(book_id):

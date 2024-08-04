@@ -1,4 +1,4 @@
-from sqlalchemy import select, update
+from sqlalchemy import select, update, delete
 from app.database.connector import connect_to_db
 from app.database.schemas.user import User
 from app.utils.hash import deterministic_hash
@@ -106,3 +106,33 @@ def authenticate_user(email, password):
         return False, e
     finally:
         session.close()    
+
+def retrieve_all_users():
+    try:
+        engine, session = connect_to_db()
+        stmt = select(User.email, User.fname, User.lname, User.role)
+        with engine.connect() as conn:
+            results = conn.execute(stmt)
+            users = [{"email": row[0], "fname": row[1], "lname": row[2], "role": row[3]} for row in results.fetchall()]
+        return True, "Users retrieved successfully", users
+    except Exception as e:
+        return False, str(e), []
+    finally:
+        session.close()
+
+def delete_user(email: str):
+    try:
+        engine, session = connect_to_db()
+        stmt = delete(User).where(User.email == email)
+        with session.begin():
+            result = session.execute(stmt)
+            session.commit()
+            if result.rowcount > 0:
+                return True, "User deleted successfully"
+            else:
+                return False, "User not found"
+    except Exception as e:
+        session.rollback()
+        return False, str(e)
+    finally:
+        session.close()

@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String
-from app.database.Schemas.base import Base
+from app.database.schemas.base import Base
 # Under test
 class Genre(Base):
     __tablename__ = 'genres'
