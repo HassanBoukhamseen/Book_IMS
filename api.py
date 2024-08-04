@@ -71,13 +71,14 @@ def get_books(
     current_user: Annotated[dict, Depends(get_current_user)],
     page: int = 1,
     per_page: int = 18,
-    search: str = Query(None)
+    search: str = Query(None),
+    sort_by: str = Query(None)
 ):
-    # Modify the retrieval function to handle search
-    success, message, books = retrieve_books_from_db(page, per_page, search)
+    success, message, books = retrieve_books_from_db(page, per_page, search, sort_by)
     if not success:
         raise HTTPException(status_code=401, detail=message)
     return {"message": message, "books": books, "page": page, "per_page": per_page}
+
 
 @app.get("/books/{book_id}")
 def get_book(book_id: int, current_user: Annotated[dict, Depends(get_current_user)]):

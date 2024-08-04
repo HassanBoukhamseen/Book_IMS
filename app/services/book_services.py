@@ -1,4 +1,4 @@
-from sqlalchemy import select, delete, insert, update, or_  
+from sqlalchemy import select, delete, asc, update, or_, insert, desc
 from app.database.connector import connect_to_db
 from app.database.schemas.books import Book
 from app.database.schemas.preferences import Preferences
@@ -53,7 +53,7 @@ def retrieve_single_book(id):
     finally:
         session.close()    
 
-def retrieve_books_from_db(page: int, per_page: int, search: str = None):
+def retrieve_books_from_db(page: int, per_page: int, search: str = None, sort_by: str = None):
     try:
         engine, session = connect_to_db()
         query = session.query(Book)
@@ -68,6 +68,20 @@ def retrieve_books_from_db(page: int, per_page: int, search: str = None):
                 )
             )
         
+        if sort_by:
+            if sort_by == 'most_trending':
+                query = query.order_by(desc(Book.rating))  
+            elif sort_by == 'recommended':
+                query = query.order_by(desc(Book.rating))  
+            elif sort_by == 'most_recent_publish_year':
+                query = query.order_by(desc(Book.year))
+            elif sort_by == 'earliest_publish_year':
+                query = query.order_by(asc(Book.year))
+            elif sort_by == 'top_rated':
+                query = query.order_by(desc(Book.rating))
+            elif sort_by == 'least_rated':
+                query = query.order_by(asc(Book.rating))
+
         total_books = query.count()
         books = query.offset((page - 1) * per_page).limit(per_page).all()
         
