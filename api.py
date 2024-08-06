@@ -96,6 +96,7 @@ def add_book(book: Book, current_user: Annotated[dict, Depends(get_current_user)
         raise HTTPException(status_code=400, detail=message)
     return {"message": message, "book_id": book_id}
 
+
 @app.put("/books/{book_id}")
 def update_book(book_id: int, new_book: BookUpdateCurrent, current_user: dict = Depends(get_current_user)):
     if current_user["role"] != 1:
@@ -106,13 +107,14 @@ def update_book(book_id: int, new_book: BookUpdateCurrent, current_user: dict = 
     return {"message": message, "book_id": book_id}
 
 @app.delete("/books/{book_id}")
-def delete_book_route(book_id: int, current_user: Annotated[dict, Depends(get_current_user)]):
+def delete_book_route(book_id: str, current_user: Annotated[dict, Depends(get_current_user)]):
     if current_user["role"] != 1:
         raise HTTPException(status_code=403, detail="Not Authorized")
     success, message = delete_book_from_db(book_id)
     if not success:
         raise HTTPException(status_code=400, detail=message)
     return {"message": message, "book": book_id}
+
 
 @app.get("/authors")
 def get_authors(current_user: Annotated[dict, Depends(get_current_user)]):
@@ -237,8 +239,7 @@ def get_recommendations(current_user: Annotated[dict, Depends(get_current_user)]
 
 @app.post("/like")
 def like_book(like: LikeCreate, current_user: Annotated[dict, Depends(get_current_user)]):
-    print(f"Received payload: {like}")  
-    print(f"Current user: {current_user}")  
+    print(f"debuggin..Received payload: {like}")  
     if not like.book_id:
         raise HTTPException(status_code=400, detail="Book ID is required")
     success, message = add_like_to_book(current_user["email"], like.book_id)

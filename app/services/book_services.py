@@ -64,7 +64,8 @@ def retrieve_books_from_db(page: int, per_page: int, search: str = None, sort_by
                 or_(
                     Book.title.ilike(search_term),
                     Book.genre.ilike(search_term),
-                    Book.author_name.ilike(search_term)
+                    Book.author_name.ilike(search_term),
+                    Book.book_id.ilike(search_term)  
                 )
             )
         
@@ -95,48 +96,58 @@ def retrieve_books_from_db(page: int, per_page: int, search: str = None, sort_by
         session.close()
 
 
+
 def delete_book_from_db(book_id):
     try:
         engine, session = connect_to_db()
         with session.begin():
-            stmt = delete(Book).where(Book.book_id == book_id)
+            stmt = delete(Book).where(Book.book_id == book_id)  
             result = session.execute(stmt)
             if result.rowcount > 0:
-                return True, "Book deleted successfully" 
+                return True, "Book deleted successfully"
             else:
-                return False, "Book could not be deleted"
+                return False, "Book could not be deleted or was not found."
     except Exception as e:
-        print(e)
+        print(f"Error deleting book with ID {book_id}: {e}")
         session.rollback()
-        return False, e
+        return False, str(e)
     finally:
         session.close()
 
+
+
 def add_book_to_db(book: Book):
+    
+    engine, session = connect_to_db()
+    existing_book = session.query(Book).filter_by(book_id=book.book_id).first()
+    if existing_book:
+        return False, "Book ID already exists", None
+
     success, message, author = retrieve_single_author(book.author_id)
     if not success:
         return success, message, None
-    
+
     to_add = Book(
+        book_id=book.book_id,
         title=book.title, 
         genre=book.genre, 
         description=book.description, 
         year=book.year, 
-        author_id=book.author_id
+        author_id=book.author_id,
+        author_name=author.name  
     )
-    
-    engine, session = connect_to_db()
+
     try:
         session.add(to_add)
         session.commit()
-        book_id = to_add.book_id
-        return True, "Book added Successfully", book_id
+        return True, "Book added successfully", book.book_id
     except Exception as e:
         session.rollback()
-        return False, e, None
+        return False, str(e), None
     finally:
         session.close()
-        
+
+
 def edit_book_info(book_id: int, new_book: BookUpdateCurrent):
     success, message, book = retrieve_single_book(book_id)
     if not success:
